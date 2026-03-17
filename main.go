@@ -3,21 +3,22 @@ package main
 import (
 	"fmt"
 	"net/http"
+
+	"example.com/m/internal/handlers"
+	"example.com/m/internal/models"
 )
 
-func defaultHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello World!")
-}
-
-// Creates a new survey using a struct Survey
-func createSurvey(w http.ResponseWriter, r *http.Request) {
-
-}
+var tempDB = []models.Survey{}
+var def_handler = handlers.Handler{TempDB: &tempDB}
 
 func main() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", defaultHandler)
+	mux.HandleFunc("/", def_handler.DefaultHandler)
+	mux.HandleFunc("POST /surveys", def_handler.CreateSurvey)
 
-	http.ListenAndServe(":8080", mux)
 	fmt.Printf("Server should be running on 8080 port now.\n")
+	err := http.ListenAndServe(":8080", mux)
+	if err != nil {
+		panic(err)
+	}
 }
