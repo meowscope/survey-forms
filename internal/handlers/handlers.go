@@ -85,11 +85,29 @@ func (h *Handler) DeleteSurvey(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	response := map[string]any{
-		"message":    "succesfully deleted the survey",
+		"message":    "successfully deleted the survey",
 		"deleted_id": called_survey.ID,
 	}
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
 		http.Error(w, "failed to encode a response", http.StatusInternalServerError)
+	}
+}
+
+func (h *Handler) GetSurveys(w http.ResponseWriter, r *http.Request) {
+	h.Mu.RLock()
+	if len(*h.TempDB) == 0 {
+		http.Error(w, "nothing to display", http.StatusNotFound)
+		return
+	}
+	surveys := *h.TempDB
+	h.Mu.RUnlock()
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	err := json.NewEncoder(w).Encode(surveys)
+	if err != nil {
+		http.Error(w, "failed to encode", http.StatusInternalServerError)
 	}
 }

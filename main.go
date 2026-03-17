@@ -17,6 +17,7 @@ func main() {
 	mux.HandleFunc("/", def_handler.DefaultHandler)
 	mux.HandleFunc("POST /surveys", def_handler.CreateSurvey)
 	mux.HandleFunc("DELETE /surveys", def_handler.DeleteSurvey)
+	mux.HandleFunc("GET /surveys", def_handler.GetSurveys)
 
 	fmt.Printf("Server should be running on 8080 port now.\n")
 	err := http.ListenAndServe(":8080", mux)
