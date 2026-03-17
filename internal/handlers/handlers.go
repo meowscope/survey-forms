@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -14,6 +15,7 @@ import (
 type Handler struct {
 	Mu     *sync.RWMutex
 	TempDB *[]models.Survey
+	DB     *sql.DB
 }
 
 func (h *Handler) DefaultHandler(w http.ResponseWriter, r *http.Request) {
