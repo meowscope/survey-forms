@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"slices"
 	"sync"
@@ -28,8 +29,8 @@ func (h *Handler) CreateSurvey(w http.ResponseWriter, r *http.Request) {
 	currentDate := time.Now()
 	new_survey := models.Survey{}
 	decoder := json.NewDecoder(r.Body)
-	decoder.DisallowUnknownFields()
 
+	decoder.DisallowUnknownFields()
 	err := decoder.Decode(&new_survey)
 	if err != nil {
 		http.Error(w, "invalid JSON request", http.StatusBadRequest)
@@ -45,6 +46,7 @@ func (h *Handler) CreateSurvey(w http.ResponseWriter, r *http.Request) {
 
 	err = repository.InsertSurvey(h.DB, &new_survey)
 	if err != nil {
+		log.Printf("CreateSurvey: insert failed: %v", err)
 		http.Error(w, "failed on db inserting", http.StatusInternalServerError)
 		return
 	}
@@ -68,6 +70,8 @@ func (h *Handler) DeleteSurvey(w http.ResponseWriter, r *http.Request) {
 	}
 	called_survey := delete{}
 	decoder := json.NewDecoder(r.Body)
+
+	decoder.DisallowUnknownFields()
 	err := decoder.Decode(&called_survey)
 	if err != nil {
 		http.Error(w, "invalid json request", http.StatusBadRequest)
@@ -103,18 +107,17 @@ func (h *Handler) DeleteSurvey(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetSurveys(w http.ResponseWriter, r *http.Request) {
-	h.Mu.RLock()
-	defer h.Mu.RUnlock()
-	if len(*h.TempDB) == 0 {
-		http.Error(w, "nothing to display", http.StatusNotFound)
+	res, err := repository.ListSurveys(h.DB)
+	if err != nil {
+		log.Printf("GetSurveys: parsing failed: %v", err)
+		http.Error(w, "failed to list surveys", http.StatusInternalServerError)
 		return
 	}
-	surveys := *h.TempDB
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	err := json.NewEncoder(w).Encode(surveys)
+	err = json.NewEncoder(w).Encode(res)
 	if err != nil {
 		http.Error(w, "failed to encode", http.StatusInternalServerError)
 	}

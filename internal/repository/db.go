@@ -62,23 +62,51 @@ func InsertSurvey(h *sql.DB, survey *models.Survey) error {
 	defer tx.Rollback()
 
 	const inserting_surveys = `
-	INSERT INTO surveys(id, title, created_at)
-	VALUES (?, ?, ?);
+	INSERT INTO surveys(id, name, description, created_at)
+	VALUES (?, ?, ?, ?);
 	`
 	const inserting_questions = `
 	INSERT INTO questions(id, survey_id, content)
 	VALUES (?, ?, ?);
 	`
 
-	_, err = tx.Exec(inserting_surveys, survey.ID, survey.Name, survey.CreatedAt)
+	_, err = tx.Exec(inserting_surveys, survey.ID, survey.Name, survey.Description, survey.CreatedAt)
 	if err != nil {
 		return fmt.Errorf("failed at inserting surveys %s into the db: %w", survey.ID, err)
 	}
 	for _, j := range survey.Questions_list {
 		_, err = tx.Exec(inserting_questions, j.ID, j.SurveyID, j.Description)
 		if err != nil {
-			return fmt.Errorf("failed while inserting question %s %v", j.ID, err)
+			return fmt.Errorf("failed while inserting question %s %w", j.ID, err)
 		}
 	}
 	return tx.Commit()
+}
+
+func ListSurveys(h *sql.DB) ([]models.Survey, error) {
+	const searchSurvey = `
+	SELECT id, name, description, created_at FROM surveys
+	`
+	rows, err := h.Query(searchSurvey)
+	if err != nil {
+		return nil, fmt.Errorf("failed when parsing surveys: %w", err)
+	}
+	defer rows.Close()
+
+	res := []models.Survey{}
+	for rows.Next() {
+		var temp models.Survey
+		err = rows.Scan(&temp.ID, &temp.Name, &temp.Description, &temp.CreatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("failed when preparing results: %w", err)
+		}
+		res = append(res, temp)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, fmt.Errorf("iteration error on reading surveys: %w", err)
+	}
+
+	return res, nil
 }
