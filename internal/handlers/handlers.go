@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 
+	"example.com/m/internal/dto"
 	"example.com/m/internal/models"
 	"example.com/m/internal/repository"
 	"github.com/google/uuid"
@@ -23,7 +23,6 @@ func (h *Handler) DefaultHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CreateSurvey(w http.ResponseWriter, r *http.Request) {
-	currentDate := time.Now()
 	new_survey := models.Survey{}
 	decoder := json.NewDecoder(r.Body)
 
@@ -33,15 +32,14 @@ func (h *Handler) CreateSurvey(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid JSON request", http.StatusBadRequest)
 		return
 	}
-	new_survey.CreatedAt = currentDate
 
 	err = models.ValidateSurveyAdding(new_survey)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	err = repository.InsertSurvey(h.DB, &new_survey)
+	dtoResponse := dto.InternalCreateSurvey(new_survey)
+	res, err := repository.InsertSurvey(h.DB, dtoResponse)
 	if err != nil {
 		log.Printf("CreateSurvey: insert failed: %v", err)
 		http.Error(w, "failed on db inserting", http.StatusInternalServerError)
@@ -52,7 +50,7 @@ func (h *Handler) CreateSurvey(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	response := map[string]any{
 		"message": "survey successfully created",
-		"survey":  new_survey,
+		"survey":  res,
 	}
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {

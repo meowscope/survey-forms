@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"time"
 
+	"example.com/m/internal/dto"
 	"example.com/m/internal/models"
 	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
@@ -56,10 +58,10 @@ func InitSchema(db *sql.DB) error {
 	return nil
 }
 
-func InsertSurvey(h *sql.DB, survey *models.Survey) error {
+func InsertSurvey(h *sql.DB, survey dto.RequestCreateSurvey) (models.Survey, error) {
 	tx, err := h.Begin()
 	if err != nil {
-		return err
+		return models.Survey{}, err
 	}
 	defer tx.Rollback()
 
@@ -71,18 +73,30 @@ func InsertSurvey(h *sql.DB, survey *models.Survey) error {
 	INSERT INTO questions(id, survey_id, content)
 	VALUES (?, ?, ?);
 	`
-
-	_, err = tx.Exec(inserting_surveys, survey.ID, survey.Name, survey.Description, survey.CreatedAt)
+	newID := uuid.New()
+	currentDate := time.Now()
+	_, err = tx.Exec(inserting_surveys, newID, survey.Name, survey.Description, currentDate)
 	if err != nil {
-		return fmt.Errorf("failed at inserting surveys %s into the db: %w", survey.ID, err)
+		return models.Survey{}, fmt.Errorf("failed at inserting surveys %s into the db: %w", newID, err)
 	}
 	for _, j := range survey.Questions_list {
 		_, err = tx.Exec(inserting_questions, j.ID, j.SurveyID, j.Description)
 		if err != nil {
-			return fmt.Errorf("failed while inserting question %s %w", j.ID, err)
+			return models.Survey{}, fmt.Errorf("failed while inserting question %s %w", j.ID, err)
 		}
 	}
-	return tx.Commit()
+	err = tx.Commit()
+	if err != nil {
+		return models.Survey{}, err
+	}
+
+	created := models.Survey{
+		ID:          newID,
+		Name:        survey.Name,
+		Description: survey.Description,
+		CreatedAt:   currentDate,
+	}
+	return created, nil
 }
 
 var ErrSurveyNotFound = errors.New("survey not found")
