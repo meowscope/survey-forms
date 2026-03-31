@@ -6,10 +6,13 @@ import (
 
 	"example.com/m/internal/handlers"
 	"example.com/m/internal/repository"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 func main() {
-	mux := http.NewServeMux()
+	r := chi.NewRouter()
 	db, err := repository.OpenDB()
 	if err != nil {
 		log.Fatalf("failed at db open: %v", err)
@@ -22,33 +25,15 @@ func main() {
 
 	def_handler := &handlers.Handler{DB: db}
 
-	mux.HandleFunc("/", def_handler.DefaultHandler)
-
-	// Single path for /surveys
-	mux.HandleFunc("/surveys", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodPost:
-			def_handler.CreateSurvey(w, r)
-		case http.MethodGet:
-			def_handler.GetSurveys(w, r)
-		default:
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
-
-	mux.HandleFunc("/survey", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			def_handler.GetSingleSurvey(w, r)
-		case http.MethodDelete:
-			def_handler.DeleteSurvey(w, r)
-		default:
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
+	r.Use(middleware.Logger)
+	r.Get("/", def_handler.DefaultHandler)
+	r.Get("/surveys", def_handler.GetSurveys)
+	r.Post("/surveys", def_handler.CreateSurvey)
+	r.Get("/survey", def_handler.GetSingleSurvey)
+	r.Delete("/survey", def_handler.DeleteSurvey)
 
 	log.Printf("starting server on :8080")
-	if err := http.ListenAndServe(":8080", mux); err != nil {
+	if err := http.ListenAndServe(":8080", r); err != nil {
 		log.Fatalf("server failed: %v", err)
 	}
 }

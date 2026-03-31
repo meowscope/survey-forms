@@ -7,6 +7,14 @@ import (
 	"github.com/google/uuid"
 )
 
+type RequestDeleteSurvey struct {
+	ID uuid.UUID `json:"id"`
+}
+
+type RequestLookupSurvey struct {
+	ID uuid.UUID `json:"id"`
+}
+
 type RequestCreateSurvey struct {
 	Name           string                  `json:"name"`
 	Description    string                  `json:"description"`
@@ -25,17 +33,17 @@ type RequestCreateChoice struct {
 }
 
 func ToSurvey(req RequestCreateSurvey) models.Survey {
-	s := models.Survey{
+	survey := models.Survey{
 		ID:          uuid.New(),
 		Name:        req.Name,
 		Description: req.Description,
-		CreatedAt:   time.Now(),
+		CreatedAt:   time.Now().UTC(),
 	}
 
 	for _, q := range req.Questions_list {
 		mq := models.Question{
 			ID:          uuid.New(),
-			SurveyID:    s.ID,
+			SurveyID:    survey.ID,
 			Description: q.Description,
 			Type:        q.Type,
 			IsMandatory: q.IsMandatory,
@@ -46,9 +54,9 @@ func ToSurvey(req RequestCreateSurvey) models.Survey {
 				Description: c.Description,
 			})
 		}
-		s.Questions_list = append(s.Questions_list, mq)
+		survey.Questions_list = append(survey.Questions_list, mq)
 	}
-	return s
+	return survey
 }
 
 type ResponseGetSurveys struct {

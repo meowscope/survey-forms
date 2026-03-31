@@ -10,7 +10,6 @@ import (
 	"example.com/m/internal/dto"
 	"example.com/m/internal/models"
 	"example.com/m/internal/repository"
-	"github.com/google/uuid"
 )
 
 type Handler struct {
@@ -71,13 +70,10 @@ func (h *Handler) CreateSurvey(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) DeleteSurvey(w http.ResponseWriter, r *http.Request) {
-	type delete struct {
-		ID uuid.UUID `json:"id"`
-	}
-	called_survey := delete{}
+	survey := dto.RequestDeleteSurvey{}
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
-	err := decoder.Decode(&called_survey)
+	err := decoder.Decode(&survey)
 	if err != nil {
 		http.Error(w, "invalid json request", http.StatusBadRequest)
 		log.Printf("%v", err)
@@ -89,7 +85,7 @@ func (h *Handler) DeleteSurvey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = repository.DeleteSurveyByID(h.DB, called_survey.ID)
+	err = repository.DeleteSurveyByID(h.DB, survey.ID)
 	if err != nil {
 		if errors.Is(err, repository.ErrSurveyNotFound) {
 			http.Error(w, "survey not found", http.StatusNotFound)
@@ -104,7 +100,7 @@ func (h *Handler) DeleteSurvey(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	response := map[string]any{
 		"message":    "successfully deleted the survey",
-		"deleted_id": called_survey.ID,
+		"deleted_id": survey.ID,
 	}
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
@@ -132,10 +128,7 @@ func (h *Handler) GetSurveys(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetSingleSurvey(w http.ResponseWriter, r *http.Request) {
-	type getsingle struct {
-		ID uuid.UUID `json:"id"`
-	}
-	called_id := getsingle{}
+	called_id := dto.RequestLookupSurvey{}
 
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
@@ -159,6 +152,7 @@ func (h *Handler) GetSingleSurvey(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "failed while interacting with the database", http.StatusInternalServerError)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(res)
