@@ -3,6 +3,8 @@ package models
 import (
 	"fmt"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 func ValidateSurveyAdding(s Survey) error {
@@ -32,6 +34,13 @@ func ValidateSurveyAdding(s Survey) error {
 				return fmt.Errorf("choice %d is empty at questions_list[%d]", j, i)
 			}
 		}
+	}
+	return nil
+}
+
+func ValidateUuid(id string) error {
+	if err := uuid.Validate(id); err != nil {
+		return fmt.Errorf("failed on validating an ID: %s", id)
 	}
 	return nil
 }

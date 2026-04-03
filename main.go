@@ -30,7 +30,7 @@ func main() {
 	r.Get("/surveys", def_handler.GetSurveys)
 	r.Post("/surveys", def_handler.CreateSurvey)
 	r.Get("/survey", def_handler.GetSingleSurvey)
-	r.Delete("/survey", def_handler.DeleteSurvey)
+	r.Delete("/survey/{surveyId}", def_handler.DeleteSurvey)
 
 	log.Printf("starting server on :8080")
 	if err := http.ListenAndServe(":8080", r); err != nil {

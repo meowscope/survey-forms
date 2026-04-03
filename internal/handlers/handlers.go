@@ -10,6 +10,7 @@ import (
 	"example.com/m/internal/dto"
 	"example.com/m/internal/models"
 	"example.com/m/internal/repository"
+	"github.com/go-chi/chi/v5"
 )
 
 type Handler struct {
@@ -70,22 +71,14 @@ func (h *Handler) CreateSurvey(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) DeleteSurvey(w http.ResponseWriter, r *http.Request) {
-	survey := dto.RequestDeleteSurvey{}
-	decoder := json.NewDecoder(r.Body)
-	decoder.DisallowUnknownFields()
-	err := decoder.Decode(&survey)
+	survey := chi.URLParam(r, "surveyId")
+	err := models.ValidateUuid(survey)
 	if err != nil {
-		http.Error(w, "invalid json request", http.StatusBadRequest)
-		log.Printf("%v", err)
+		http.Error(w, "bad uuid", http.StatusBadRequest)
 		return
 	}
 
-	if decoder.More() {
-		http.Error(w, "multiple json objects/trailing junk", http.StatusBadRequest)
-		return
-	}
-
-	err = repository.DeleteSurveyByID(h.DB, survey.ID)
+	err = repository.DeleteSurveyByID(h.DB, survey)
 	if err != nil {
 		if errors.Is(err, repository.ErrSurveyNotFound) {
 			http.Error(w, "survey not found", http.StatusNotFound)
@@ -100,7 +93,7 @@ func (h *Handler) DeleteSurvey(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	response := map[string]any{
 		"message":    "successfully deleted the survey",
-		"deleted_id": survey.ID,
+		"deleted_id": survey,
 	}
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {

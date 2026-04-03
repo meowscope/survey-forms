@@ -128,7 +128,7 @@ func InsertSurvey(h *sql.DB, survey models.Survey) (models.Survey, error) {
 
 var ErrSurveyNotFound = errors.New("survey not found")
 
-func DeleteSurveyByID(h *sql.DB, id uuid.UUID) error {
+func DeleteSurveyByID(h *sql.DB, id string) error {
 	const deleteSurvey = `
 	DELETE FROM surveys
 	WHERE id = ?;
