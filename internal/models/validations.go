@@ -9,7 +9,7 @@ import (
 
 func ValidateSurveyAdding(s Survey) error {
 	if strings.TrimSpace(s.Name) == "" {
-		return fmt.Errorf("name cannot be empty")
+		return fmt.Errorf("survey name cannot be empty")
 	}
 	if len(s.Questions_list) == 0 {
 		return fmt.Errorf("no questions found")
