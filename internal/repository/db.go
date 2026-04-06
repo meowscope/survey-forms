@@ -266,3 +266,25 @@ func RetrieveSurvey(h *sql.DB, id string) (dto.RequestSurvey, error) {
 
 	return response, nil
 }
+
+// Testing environment
+func OpenDB_test() (*sql.DB, error) {
+	db, err := sqlx.Connect("sqlite3", "./test.db?_foreign_keys=1")
+	if err != nil {
+		fmt.Println(err)
+		return nil, fmt.Errorf("failed to connect to database: %w", err)
+	}
+
+	db.SetMaxIdleConns(5)
+	db.SetMaxOpenConns(10)
+	db.SetConnMaxIdleTime(time.Second * 30)
+
+	err = db.Ping()
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	log.Printf("established connection to db")
+	return db.DB, nil
+}

@@ -32,10 +32,10 @@ type RequestQuestion struct {
 }
 
 type RequestCreateQuestion struct {
-	Description string              `json:"description"`
-	Type        models.QuestionType `json:"type"`
-	Choices     []models.Question   `json:"choices,omitempty"`
-	IsMandatory bool                `json:"is_mandatory"`
+	Description string                 `json:"description"`
+	Type        models.QuestionType    `json:"type"`
+	Choices     []models.Answer_choice `json:"choices,omitempty"`
+	IsMandatory bool                   `json:"is_mandatory"`
 }
 
 func ToSurvey(req RequestCreateSurvey) models.Survey {
