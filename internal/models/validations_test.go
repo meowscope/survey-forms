@@ -21,6 +21,10 @@ func TestValidateSurvey(t *testing.T) {
 		mutate  func(*Survey)
 		wantErr string
 	}{
+		"valid survey": {
+			mutate:  func(s *Survey) {},
+			wantErr: "",
+		},
 		"survey name is blank": {
 			mutate: func(s *Survey) {
 				s.Name = " "
@@ -109,7 +113,15 @@ func TestValidateSurvey(t *testing.T) {
 			testcase.mutate(&s)
 
 			err := ValidateSurveyAdding(s)
-			if err == nil || err.Error() != testcase.wantErr {
+
+			if testcase.wantErr == "" {
+				if err != nil {
+					t.Fatalf("got err %v, expected a success", err)
+				}
+				return
+			}
+
+			if err.Error() != testcase.wantErr {
 				t.Fatalf("got err %v, want %q", err, testcase.wantErr)
 			}
 		})
