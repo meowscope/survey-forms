@@ -1,7 +1,9 @@
 package models
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/google/uuid"
@@ -41,6 +43,21 @@ func ValidateSurveyAdding(s Survey) error {
 func ValidateUuid(id string) error {
 	if err := uuid.Validate(id); err != nil {
 		return fmt.Errorf("failed on validating an ID: %s", id)
+	}
+	return nil
+}
+
+// Instead of checking with decode.More() we check the next non-whitespace character with Token() to find the trailing data
+// Use this function when decoding requests
+func DecodeStrict(decoder *json.Decoder, v any) error {
+	if err := decoder.Decode(v); err != nil {
+		return fmt.Errorf("failed while decoding the request: %w", err)
+	}
+	_, err := decoder.Token()
+	if err != nil {
+		if err != io.EOF {
+			return fmt.Errorf("unexpected trailing data after JSON request: %w", err)
+		}
 	}
 	return nil
 }

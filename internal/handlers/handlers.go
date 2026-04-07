@@ -33,14 +33,9 @@ func (h *Handler) CreateSurvey(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
 	decoder.DisallowUnknownFields()
-	err := decoder.Decode(&new_survey)
+	err := models.DecodeStrict(decoder, &new_survey)
 	if err != nil {
-		http.Error(w, "invalid JSON request", http.StatusBadRequest)
-		return
-	}
-
-	if decoder.More() {
-		http.Error(w, "multiple json objects/trailing junk", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 

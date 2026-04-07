@@ -254,7 +254,7 @@ func RetrieveSurvey(h *sql.DB, id string) (dto.RequestSurvey, error) {
 		dto_question := dto.RequestQuestion{
 			Description: question.Description,
 			Type:        question.Type,
-			Choices:     question.Choices,
+			Choices:     choices,
 			IsMandatory: question.IsMandatory,
 		}
 		response.Questions_list = append(response.Questions_list, dto_question)

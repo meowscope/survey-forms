@@ -28,7 +28,7 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Get("/", handlers.DefaultHandler)
 	r.Get("/surveys", def_handler.GetSurveys)
-	r.Post("/surveys", def_handler.CreateSurvey)
+	r.Post("/survey", def_handler.CreateSurvey)
 	r.Get("/survey/{surveyId}", def_handler.GetSingleSurvey)
 	r.Delete("/survey/{surveyId}", def_handler.DeleteSurvey)
 
